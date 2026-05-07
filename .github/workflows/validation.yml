@@ -7,11 +7,6 @@ defaults:
 on:
   push:
     branches: [ '17.0', '18.0' ]
-    paths-ignore:
-      - 'hilla-logo.svg'
-      - 'README.md'
-      - '.github/ISSUE_TEMPLATE/*'
-      - 'packages/**/README.md'
 
 jobs:
   init:
