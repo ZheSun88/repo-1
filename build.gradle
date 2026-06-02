@@ -1,0 +1,69 @@
+plugins {
+    // Develop, build and publish a Gradle plugin
+    id 'java-gradle-plugin'
+    id 'maven-publish'
+    // Publish to the Gradle Plugin Portal — same version Flow pins
+    // https://github.com/vaadin/flow/blob/main/flow-plugins/flow-gradle-plugin/build.gradle#L12
+    id 'com.gradle.plugin-publish' version '0.11.0'
+}
+
+repositories {
+    mavenCentral()
+}
+
+sourceCompatibility = 21
+targetCompatibility = 21
+
+dependencies {
+    testImplementation platform('org.junit:junit-bom:5.10.2')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+// Pre-define sourcesJar/javadocJar (modern archiveClassifier API), exactly as Flow
+// does. plugin-publish 0.11.0 reuses these tasks if they already exist; otherwise it
+// creates them via Jar.setClassifier(), an API removed in Gradle 8 — which is why
+// 0.11.0 only works on Gradle 8.x when these tasks are declared up front.
+task sourcesJar(type: Jar) {
+    from sourceSets.main.allSource
+    archiveClassifier = 'sources'
+    include 'io/**/*.java'
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    archiveClassifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+artifacts {
+    archives jar
+    archives sourcesJar
+}
+
+// Per-plugin declaration (id, display name, implementation class)
+gradlePlugin {
+    plugins {
+        greeting {
+            id = 'io.github.zhesun88.testing'
+            displayName = 'repo-1 Testing Gradle Plugin'
+            implementationClass = 'io.github.zhesun88.testing.TestingPlugin'
+        }
+    }
+}
+
+// Plugin Portal metadata — the 0.11.0 DSL uses the pluginBundle block
+pluginBundle {
+    website = 'https://github.com/ZheSun88/repo-1'
+    vcsUrl = 'https://github.com/ZheSun88/repo-1.git'
+    description = 'A testing Gradle plugin used to validate the Gradle Plugin Portal release pipeline.'
+    tags = ['testing', 'example']
+}
+
+// Note: java-gradle-plugin + plugin-publish already create the 'pluginMaven'
+// publication and the plugin marker. Flow additionally declares an explicit
+// maven(MavenPublication) because it also pushes to Maven Central; that is
+// omitted here to avoid duplicate-coordinate publications for a portal-only repo.
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
